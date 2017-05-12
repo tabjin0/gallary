@@ -1,0 +1,429 @@
+<!--jinboy-->
+
+<!doctype html>
+<html lang=zh-cn>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>画廊show</title>
+    <style type="text/css">
+        * {
+            padding: 0;
+            margin: 0;
+        }
+        body {
+            background-color: #ffffff;
+            color: #555555;
+            font-family: "Avenir Next","Lantinghei SC";
+            font-size: 14px;
+            /*字体平滑*/
+            -webkit-webkit-font-smoothing: antialiased;
+            -moz-webkit-font-smoothing: antialiased;
+            -ms-webkit-font-smoothing: antialiased;
+            -o-webkit-font-smoothing: antialiased;
+            webkit-font-smoothing: antialiased;
+        }
+        .wrap {
+            width: 100%;
+            height: 700px;
+            /* 垂直居中*/
+            position: absolute;
+            top: 50%;
+            margin-top: -350px;
+            background-color: #333;
+            /* 垂直居中*/
+            overflow: hidden;/*超出div范围将不显示*/
+
+            /*没有perspective其实也是使得.photo旋转，只是没有了3D效果，感觉就像是压缩了*/
+            /*-webkit-perspective  子元素获得3D效果支持*/
+            -webkit-perspective: 800px;
+            -moz-perspective: 800px;
+            -ms-perspective: 800px;
+            perspective: 800px;
+            /*-webkit-perspective  子元素获得3D效果支持*/
+        }
+
+        .photo {
+            width: 260px;
+            height: 320px;
+            position: absolute;
+            z-index: 1;
+            -webkit-box-shadow: 0 0 1px rgba(0,0,0,0.01);
+            -moz-box-shadow: 0 0 1px rgba(0,0,0,0.01);
+            box-shadow: 0 0 1px rgba(0,0,0,0.01);
+            /*演示*/
+            /*左边绕着Y轴旋转45度角*/
+            /*-webkit-transform: rotateY(45deg);*/
+            /*-moz-transform: rotateY(45deg);*/
+            /*-ms-transform: rotateY(45deg);*/
+            /*-o-transform: rotateY(45deg);*/
+            /*transform: rotateY(45deg);*/
+            /*左边绕着Y轴旋转45度角*/
+        }
+        .photo .side {
+            width: 100%;  /*根据.photo决定*/
+            height: 100%;
+            background-color: #eee;
+            position: absolute;
+            top: 0;
+            right: 0;
+            /**/
+            padding: 20px;
+            -webkit-box-sizing: border-box;
+            -moz-box-sizing: border-box;
+            box-sizing: border-box;
+            /**/
+        }
+        .photo .side-front {}
+        .photo .side-front .image{
+            width: 100%;
+            height: 250px;
+            line-height: 250px;
+            overflow: hidden;
+        }
+        /*注意别被side-back遮住*/
+        .photo .side-front .image img{
+            width: 100%;
+            height: 100%;
+
+        }
+        .photo .side-front .caption{
+            text-align: center;
+            font-size: 16px;
+            line-height:16px;
+        }
+        
+        .photo .side-back {
+            /*display: none;*/
+        }
+        .photo .side-back .description {
+            color: #666;
+            font-size: 14px;
+            line-height: 1.5em;
+        }
+
+        /*当前选中的海报样式*/
+        .photo_center {
+            width: 260px;
+            height: 320px;
+            left: 50%;
+            top: 50%;
+            margin-left: -130px;
+            margin-top: -160px;
+            z-index: 999;
+        }
+        /*负责旋转*/
+        .photo-wrap {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            /*3D支持，将wrap里面两个子元素都设置3D的效果*/
+            -webkit-transform-style:preserve-3d;
+            /*3D支持，将wrap里面两个子元素都设置3D的效果*/
+
+            /*动画过渡*/
+            -webkit-transition: all 1s;/*效果是旋转*/
+            -moz-transition: all 1s;
+            -ms-transition: all 1s;
+            -o-transition: all 1s;
+            /*动画过渡*/
+        }
+        /*区分正反面*/
+        .photo-wrap .side-front {
+            -webkit-transform: rotataY(0deg);/*图片旋转初始状态设定*/
+            -moz-transform: rotataY(0deg);
+            -ms-transform: rotataY(0deg);
+            -o-transform: rotataY(0deg);
+            transform: rotataY(0deg);
+        }
+        .photo-wrap .side-back {
+            -webkit-transform: rotateY(180deg);/*图片旋转结束状态设定*/
+            -moz-transform: rotateY(180deg);
+            -ms-transform: rotateY(180deg);
+            -o-transform: rotateY(180deg);
+            transform: rotateY(180deg);
+        }
+        .photo-wrap .side {
+            -webkit-backface-visibility: hidden;/*将photo的front和back两面谁在后面隐藏谁*/
+            -moz-backface-visibility: hidden;
+            -ms-backface-visibility: hidden;
+            backface-visibility: hidden;
+        }
+        /*区分正反面*/
+
+        /*正反状态调整*/
+        /*在前面就不旋转，旋转角度为0*/
+        .photo_front .photo-wrap {
+            -webkit-transform: rotataY(0deg);/*如果是front－to－front将不动，如果是back－to－front将由0deg转变为180deg*/
+            -moz-transform: rotataY(0deg);
+            -ms-transform: rotataY(0deg);
+            -o-transform: rotataY(0deg);
+            transform: rotataY(0deg);
+        }/*在前面就不旋转，旋转角度为0*/
+        /*在后面的话继续旋转180度，回到正面*/
+        .photo_back .photo-wrap {
+            -webkit-transform: rotateY(180deg);/*如果是back－to－back将不动，如果是front－to－back将由0deg转变为180deg*/
+            -moz-transform: rotateY(180deg);
+            -ms-transform: rotateY(180deg);
+            -o-transform: rotateY(180deg);
+            transform: rotateY(180deg);
+        }
+        /*正反状态调整*/
+
+
+        /*14.5控制按钮的样式*/
+        .nav {
+            width: 80%;
+            height: 30px;
+            line-height: 30px;
+            /*设置漂浮*/
+            position: absolute;
+            left: 10%;
+            right: 10%;/*因为width为80%，所以左右分别为10%就能居中*/
+            bottom: 20px;/*这是随便设置的一个bottom*/
+            z-index: 999;/*防止控制按钮被其他元素遮挡住*/
+            background-color: #ffffff;/*随便添加一个背景颜色查看效果*/
+            text-align: center;
+        }
+        /*14.6设置nav的基本样式*/
+
+        /*普通的样式*/
+        .nav .i {
+            width: 30px;
+            height: 30px;
+            display: inline-block;/*因为这边的i是个span元素，是个行内元素，宽和高又是块级元素需要的，所以要设置为inline-block*/
+            cursor: pointer;
+            background-color: #aaaaaa;
+            text-align: center;
+            /*按钮变圆*/
+            -webkit-border-radius: 50%;
+            -moz-border-radius:50%;
+            border-radius: 50%;
+
+            /*缩小按钮*/
+            -webkit-transform: scale(.48);/*注意，这边弄成百分号没有用*/
+
+        }
+        /*选中的样式*/
+        .nav .i_current {
+            -webkit-transform: scale(1);/*选中按钮不缩放*/
+        }
+        /*背面样式*/
+        .nav .i_back {
+
+        }
+        /*14.6设置nav的基本样式*/
+    </style>
+
+</head>
+<!-- 防止页面文字被选中 -->
+<body onselectstart = "return false;">
+<!-- 2.改写视图，为模版字符串 -->
+    <div class="wrap" id="wrap">
+        <!-- photo负责平移和旋转 -->
+        <!--<div class="photo photo_center photo_front" onclick="turn(this)" id="photo_{{index}}">;{{}}为特殊标记，index为特殊变量-->
+            <!-- photo-wrap负责翻转 -->
+        <!--增加排序功能时去掉之前的class="photo_center",否则会有很多个photo_center冲突-->
+        <div class="photo photo_center photo_front" onclick="turn(this)" id="photo_{{index}}"> <!--{{}}为特殊标记，index为特殊变量-->
+        <!--增加排序功能时去掉之前的class="photo_center",否则会有很多个photo_center冲突-->
+            <div class="photo-wrap">
+                <div class="side side-front">
+                    <p class="image"><img src="photo/{{img}}" alt="###"></p>  <!--图片切换为特殊字符串{{img}}，在photo下-->
+                    <p class="caption">{{caption}}</p>  <!--caption替换为特殊的字符串{{caption}}-->
+                </div>
+                <div class="side side-back">
+                    <p class="description">{{description}}</p>  <!--描述信息替换为特殊的字符串{{desc}}-->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="text/javascript" src="photo/data.js"></script>
+    <script type="text/javascript">
+        //3. 通用函数，获取指定ID或TAG的标签
+        function g(selector) {
+            // 判断从位置0开始的一个字符是不是"."，如果是"."，就使用获取标签的方法，否则获得id元素
+            var method =selector.substr(0,1) == "." ? "getElementsByClassName" : "getElementById";
+            return document[method](selector.substr(1));  //排除字符串第一个字符为"."或"#"，如果直接g("wrap")是不行的，他将会从会去掉第一个字符开始，也就是"rap"
+//注：这边g()函数看似获取了一系列的数组，但是这些并不是真正意义上的数组，因为g("###").length可以返回长度，但是如果g("###").sort将会返回undefined，待解决
+        }
+
+        //6.sort函数的随机random函数,range为范围
+        function random(range) {
+            var max = Math.max(range[0],range[1]);//range[0]代表0，range[1]表示data.length
+            var min = Math.min(range[0],range[1]);
+            var diff = max - min;
+            var num = Math.ceil(Math.random()*diff + min); //整数num将作为随机数传入sort()函数
+            return num;
+        }
+
+
+        //4.遍历输出所有的photo
+        var data = data;//data来自data.js
+        function add() {
+            var template = g("#wrap").innerHTML;  //获取id为wrap的标签，template为模版字符串
+            var html = []; //需要返回的空数组
+            //13.1VCD开始
+            var nav = [];//将nav设置为一个数组
+
+            //遍历数组，同时生成photo的内容
+            for (var s = 0;s < data.length;s++) {
+                //_html存储当前photo的html字符串，用模版字符串执行替换，
+                var _html = template
+                        .replace(/{{index}}/g,s)  //动态替换id="photo_{{index}}" ，注意，这边用正则因为这边有注释里面有{{index}},会有bug，可以改回"{{index}}"试试看
+                        .replace("{{img}}",data[s].img)  //动态替换src="photo/{{img}}"
+                        .replace("{{caption}}",data[s].caption)   //动态替换{{caption}}
+                        .replace("{{description}}",data[s].description);  //动态替换{{description}}
+                html.push(_html); //入栈
+                nav.push('<span id="nav_'+s+'" onclick="turn(g(\'#photo_'+s+'\'))" class="i">&nbsp;</span>');//13.2每次生成photo字符串的时候也要生成导航条控制按钮的字符串，自己来写,需要添加动态id，还有添加一个onclick操作，当被点击的时候
+            //上一行中因为turn（）在一个字符串中，所以要用转义符来表示''。上面在span中加入了空白的字符串,结果就是生成一个空格符
+//            下面将控制按钮集中一下
+                html.push('<div class="nav">'+nav.join('')+'</div>');//13.3用div元素来装所有的控制按钮。然后将所有的nav一起join()进去
+                //13.4回头将所有的样式添加进去
+
+            }
+//
+
+            g("#wrap").innerHTML = html.join(" "); //整合数组html，将数组中的所有元素放入到一个字符串中，元素是通过指定的分割符分隔的
+            //这里的separator指定为""
+            randomSort(random([0,data.length]));//执行随机排序，暂告一段落，下面设计photo的随机位置，除了一个photo_center在中间，其他的位置随机展示在左右区域里面
+        }
+        add();
+
+        //9.计算左右分区的范围,range返回一个对象{left:{x:[min,max],y:[min,max]},right:{x:[],y:[]}}
+        function range() {
+            var range = {
+                left : {x:[],y:[]},
+                right : {x:[],y:[]}
+            };
+            //10.计算详细的取值范围
+            var wrap = {
+                w : g('#wrap').clientWidth,
+                h : g('#wrap').clientHeight
+            }
+            var photo = {
+                w : g('.photo')[0].clientWidth,//这边随便第几个photo都是一样的，去高和宽就行了
+                h : g('.photo')[0].clientHeight
+            }
+            range.wrap = wrap;
+            range.photo = photo;//至此Console中查看range()函数，应该会返回四个对象，分别是left,right,wrap,photo
+            //计算left : {x:[],y:[]}中详细的x的值的范围
+            range.left.x = [ 0 - photo.w , wrap.w/2 - photo.w/2 ];
+            range.left.y = [ 0 - photo.h , wrap.h ];
+            //至此，Console中查看range()中的x的值
+            range.right.x = [ wrap.w/2 + photo.w/2 , wrap.w + photo.w ];
+            range.right.y = [ 0 - photo.h , wrap.h ];
+
+            return range;
+        }
+        //5.添加排序功能
+        function randomSort(k) {
+            //遍历一遍清除className  photo_center
+            var _photo = g(".photo");//声明一个临时变量_photo，这边将获取到一个临时的_photo数组，但是这边的_photo不是真正意义上的数组，尽管他是能获取到长度的。
+            var photos = [];  //用来存放被修改过的_photo数组
+            for (var s = 0;s < _photo.length;s++) {
+                _photo[s].className = _photo[s].className.replace(/\s*photo_center\s*/," ");//替换，\s*去掉空格的影响
+                //已经知道g("###")获取得到的不是真正意思上的数组，但是可以声明一个空数组来重新定义它
+                photos.push(_photo[s]);//这边photo是真正意义上的数组
+            }
+            //7.遍历一遍清除className  photo_center
+            var photo_center = g("#photo_"+k);      
+            photo_center.className += " photo_center"; //注意前面添加一个空格是因为直接添加photo_center会导致和前面的photo_center直接连接
+            photo_center = photos.splice(k,1)[0];//这里photo_center将是一个数组，从第k个元素开始删除一个,splice() 方法向/从数组中添加/删除项目，然后返回被删除的项目。这边photo_center已经是一个数组
+            //比较上一句代码添加和不添加的效果
+            console.log(photos.length);
+
+            //8.将若干photo划分为左右两个部分
+            var photos_left = photos.splice(0,Math.ceil(photos.length/2));//用splice切分，取整防止长度是奇数的异常情况
+            var photos_right =photos;//由于有一半被切分给左半部分，所有剩下来的就是右半部分了
+//            console.log(photos_left.length,photos_right.length);
+
+            var ranges = range();//11.注意不要用同名函数
+
+            //下面将photos_left和photos_right中的元素分别左、右分区中
+            for (s in photos_left) {
+                //由于photos_left是一个标准的数组，所以可以用s in photos_left
+                var photo = photos_left[s];//当前photo
+//                photo.style.left = '10px';
+//                photo.style.top = '10px';//至此有一部分的效果达到，这个一部分是左半部分的图片
+                //将photo的style.left和style.top设置为随机的数，需要一个函数知道随机的范围
+                photo.style.left = random(ranges.left.x) + 'px';//这边x是一个范围
+                photo.style.top = random(ranges.left.y) + 'px';//至此左分区已经设置好
+
+                //12.设置旋转角度
+//                photo.style['-webkit-transform'] = 'rotate(30deg)';//如果这么干，左分区的所有photo都是旋转30deg。下一行改进
+                photo.style['-webkit-transform'] = 'rotate('+random([-150,150])+'deg)';//用random()函数来随机生成角度
+            }
+            for (s in photos_right) {
+                //由于photos_right是一个标准的数组，所以可以用s in photos_right
+                //由于photos_left是一个标准的数组，所以可以用s in photos_left
+                var photo = photos_right[s];//当前photo
+//                photo.style.left = '10px';
+//                photo.style.top = '10px';//至此有一部分的效果达到，这个一部分是左半部分的图片
+                //将photo的style.left和style.top设置为随机的数，需要一个函数知道随机的范围
+                photo.style.left = random(ranges.right.x) + 'px';//这边x是一个范围
+                photo.style.top = random(ranges.right.y) + 'px';//至此左分区已经设置好
+                photo.style['-webkit-transform'] = 'rotate('+random([-150,150])+'deg)';//用random()函数来随机生成角度
+            }
+        }
+        //1.front-back图片正反面切换
+        function turn(e) {
+            var cls = e.className;
+            //用/photo_front/来匹配字符串的className
+            if ( /photo_front/.test(cls)) {
+                cls = cls.replace(/photo_front/,"photo_back");
+            }
+            else {
+                cls = cls.replace(/photo_back/,"photo_front");
+            }
+            return e.className = cls;
+        }
+
+    </script>
+</body>
+</html>
+
+
+<!--杂七八啦设计思路-->
+
+<!--关于左右分区的图片随机位置范围分析-->
+<!--.wrap {
+            width: 100%;
+            height: 700px;
+            /* 垂直居中*/
+            position: absolute;
+            top: 50%;
+            margin-top: -350px;
+            background-color: #333;
+            /* 垂直居中*/
+            overflow: hidden;/*超出div范围将不显示*/
+
+            /*没有perspective其实也是使得.photo旋转，只是没有了3D效果，感觉就像是压缩了*/
+            /*-webkit-perspective  子元素获得3D效果支持*/
+            -webkit-perspective: 800px;
+            -moz-perspective: 800px;
+            -ms-perspective: 800px;
+            perspective: 800px;
+            /*-webkit-perspective  子元素获得3D效果支持*/
+
+
+            .photo {
+            width: 260px;
+            height: 320px;
+            position: absolute;
+            z-index: 1;
+            -webkit-box-shadow: 0 0 1px rgba(0,0,0,0.01);
+            -moz-box-shadow: 0 0 1px rgba(0,0,0,0.01);
+            box-shadow: 0 0 1px rgba(0,0,0,0.01);
+        }
+        /*左分区
+0 - photo.width < x < wrap.width/2-phoyo.width/2
+0 - photo.height < y < wrap.height
+*/
+/*右分区
+wrap.width/2 + phoyo.width/2 < x < wrap.width + photo.width
+0 - photo.height < y < wrap.height
+*/-->
+
